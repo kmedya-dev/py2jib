@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.10)
+project(py2jib)
 
 add_library(py2jib SHARED c_wrapper/py2jib.cpp)
 
