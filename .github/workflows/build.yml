@@ -1,0 +1,32 @@
+name: Build Py2Jib
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up NDK
+      uses: nttld/setup-ndk@v1.1.0
+      with:
+        ndk-version: r27d
+
+    - name: Configure CMake
+      run: |
+        cmake -B build-${{ matrix.abi }} -S .
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake
+          -DANDROID_ABI=${{ matrix.abi }}
+          -DANDROID_PLATFORM=android-21
+
+    - name: Build
+      run: cmake --build build-${{ matrix.abi }}
