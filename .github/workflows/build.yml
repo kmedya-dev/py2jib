@@ -22,11 +22,7 @@ jobs:
         ndk-version: r27d
 
     - name: Configure CMake
-      run: |
-        cmake -B build-${{ matrix.abi }} -S .
-          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake
-          -DANDROID_ABI=${{ matrix.abi }}
-          -DANDROID_PLATFORM=android-21
+      run: cmake -B build-${{ matrix.abi }} -S . -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=${{ matrix.abi }} -DANDROID_PLATFORM=android-21
 
     - name: Build
       run: cmake --build build-${{ matrix.abi }}
