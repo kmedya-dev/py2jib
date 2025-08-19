@@ -15,7 +15,8 @@ enum ArgType {
     TYPE_LONG = 5,
     TYPE_INT_ARRAY = 6,
     TYPE_STRING_ARRAY = 7,
-    // Add other types like double, bool, etc. here
+    TYPE_JAVA_OBJECT = 8, // For Java object references
+    TYPE_EXCEPTION = 9, // For propagating exceptions
 };
 
 // The structure that Python uses to pass arguments.
@@ -31,6 +32,7 @@ struct Py2JibArg {
         // For arrays: pointer to data and size
         jint* int_array_val;
         const char** string_array_val;
+        jobject obj_val; // For Java object references (passed as global ref pointer)
     };
     int array_size; // Used for array types
 };
@@ -47,8 +49,10 @@ struct Py2JibReturn {
         jlong l_val;
         jint* int_array_val;
         char** string_array_val;
+        jobject obj_val; // For Java object references (returned as global ref pointer)
     };
     int array_size; // Used for array types
+    char* error_message; // For propagating exceptions
 };
 
 
@@ -60,6 +64,23 @@ extern "C" {
  * Returns a Py2JibReturn struct.
  */
 struct Py2JibReturn call_java_static_method(const char* class_name, const char* method_name, const char* signature, struct Py2JibArg* args, int arg_count);
+
+/**
+ * The main entry point for Python to call instance Java methods.
+ * Returns a Py2JibReturn struct.
+ */
+struct Py2JibReturn call_java_instance_method(jobject instance_obj, const char* method_name, const char* signature, struct Py2JibArg* args, int arg_count);
+
+/**
+ * The main entry point for Python to call Java constructors.
+ * Returns a Py2JibReturn struct containing the new Java object reference.
+ */
+struct Py2JibReturn new_java_object(const char* class_name, const char* signature, struct Py2JibArg* args, int arg_count);
+
+/**
+ * Frees a JNI global reference held by a Python JavaObject.
+ */
+void free_java_object_ref(jobject obj_ref);
 
 /**
  * The JNI function that Java calls to initialize the bridge.
