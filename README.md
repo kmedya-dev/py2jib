@@ -4,10 +4,12 @@ Py2Jib is a custom Python-to-Java bridge designed for Android. It allows you to 
 
 ## Features
 
-- **Easy Calls:** Simple `jni.ClassName.method(args)` syntax.
+- **Easy Calls:** Simple `jni.ClassName.method(args)` syntax for static methods, and `java_object.method(args)` for instance methods.
+- **Java Object Handling:** Pass and receive Java objects directly between Python and Java.
+- **Exception Propagation:** Java exceptions are caught and re-raised as Python exceptions.
 - **Android API Access:** Comes with helper examples for `Toast`, `WebView`, and `Sensors`.
-- **Extensible:** The bridge can be used to call any static Java method.
-- **Automatic Signature Generation:** Automatically creates JNI method signatures for `int` and `str` types.
+- **Extensible:** The bridge can be used to call any static or instance Java method, and create new Java objects.
+- **Automatic Signature Generation:** Automatically creates JNI method signatures for primitive types, strings, arrays, and Java objects.
 - **CI/CD:** Includes a GitHub Actions workflow to build and test the C++ wrapper.
 
 ## Project Structure
@@ -69,29 +71,49 @@ These instructions are for building the C++ shared library (`libpy2jib.so`) manu
 
 ## Usage
 
-The following example shows how to initialize the bridge and call a static Java method.
+The following examples demonstrate how to initialize the bridge, call static and instance Java methods, create Java objects, and handle exceptions.
 
 ```python
 import py2jib
-from py2jib import jni
+from py2jib import jni, JavaException
 from py2jib.android import Toast
 
 # 1. Initialize the bridge by providing the path to the compiled library.
 #    This only needs to be done once when your app starts.
 py2jib.init("/path/to/your/app/libs/libpy2jib.so")
 
-# 2. In your Android app\\'s Java code, initialize the bridge context.
+# 2. In your Android app\'s Java code, initialize the bridge context.
 #    This should be done on startup, for example in your Application.onCreate().
 #    com.py2jib.Py2Jib.init(this);
 
-# 3. Now you can call Java methods from Python.
+# --- Calling Static Methods ---
+# Call a static method with a void return type
 Toast.show("Hello from Python!", Toast.LENGTH_LONG)
 
-# Example of calling a standard Java library
+# Example of calling a standard Java library static method with a return value
 System = jni.java.lang.System
-# Note: Calling methods with return values is not yet implemented.
-# currentTime = System.currentTimeMillis()
-# print(f"Current time from Java: {currentTime}")
+currentTime = System.currentTimeMillis()
+print(f"Current time from Java: {currentTime}")
+
+# --- Creating Java Objects (Calling Constructors) ---
+# Create a new Java String object
+java_string = jni.java.lang.String.new("Hello from Java String!")
+print(f"Created Java String object: {java_string}")
+
+# --- Calling Instance Methods ---
+# Call an instance method on the created Java String object
+string_length = java_string.length()
+print(f"Length of Java String: {string_length}")
+
+# --- Exception Handling ---
+try:
+    # Assuming a Java method that throws an exception for demonstration
+    # For example, if you had a Java class MyClass with a static method
+    # 'throwException' that throws a RuntimeException.
+    # jni.com.py2jib.MyClass.throwException("Something went wrong!")
+    pass # Placeholder for actual exception throwing example
+except JavaException as e:
+    print(f"Caught Java Exception: {e}")
 ```
 
 
@@ -101,9 +123,9 @@ Py2Jib is designed to be integrated into a larger Android application project bu
 
 To integrate Py2Jib into a DroidBuilder project:
 
-1.  **Include Py2Jib Java Sources:** Ensure DroidBuilder's build configuration includes the Java source files located in the `java/` directory of this project.
-2.  **Include Py2Jib Native Library:** Configure DroidBuilder to compile the C++ wrapper using the `CMakeLists.txt` file in this project's root. The resulting `libpy2jib.so` should be bundled into your application's `jniLibs` directory.
-3.  **Bundle Python Code:** Ensure your Python application code (including the `python/py2jib` module) is bundled into the Android application's assets or resources, where the Python interpreter can find it at runtime.
-4.  **Initialize Bridge:** As shown in the Usage example, you'll need to initialize the Py2Jib bridge from both your Android app's Java code and your Python code at startup.
+1.  **Include Py2Jib Java Sources:** Ensure DroidBuilder\'s build configuration includes the Java source files located in the `java/` directory of this project.
+2.  **Include Py2Jib Native Library:** Configure DroidBuilder to compile the C++ wrapper using the `CMakeLists.txt` file in this project\'s root. The resulting `libpy2jib.so` should be bundled into your application\'s `jniLibs` directory.
+3.  **Bundle Python Code:** Ensure your Python application code (including the `python/py2jib` module) is bundled into the Android application\'s assets or resources, where the Python interpreter can find it at runtime.
+4.  **Initialize Bridge:** As shown in the Usage example, you\'ll need to initialize the Py2Jib bridge from both your Android app\'s Java code and your Python code at startup.
 
 ```
